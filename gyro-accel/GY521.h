@@ -59,36 +59,44 @@ enum gyro_value_t
 class GY521
 {
 		public:
-
-			double x_accel, y_accel, z_accel;
-			double x_gyro, y_gyro, z_gyro;
-			double temp;
-      
+   
 			GY521(gyro_value_t gyro_value, accel_value_t accel_value); 
       
 			void read_accel();
 			void read_gyro();
 			void read_temp();
 			void read_data();
-			void init();
+      void print_accel_data();
+      void print_gyro_data();
+      void print_temp_data();
+			bool init();
 			void read_data(int filter_size);
 			void read_accel(int filter_size);
+			double get_x_accel();
+			double get_y_accel();
+			double get_z_accel();
+			double get_x_gyro();
+			double get_y_gyro();
+			double get_z_gyro();
+			double get_temp();
 			void read_gyro(int filter_size);
 			void read_temp(int filter_size);
+      bool check_freefall();
+      bool check_tilt();
 			
 		private:  
-
+		
 			int gyro_value;
 			int accel_value;
 			double accel_lsb;
 			double gyro_lsb;
+			double x_accel, y_accel, z_accel;
+			double x_gyro, y_gyro, z_gyro;
+			double temp;
 
 			void read_reg(int16_t *data, int begin_addr);
 			double convert_data(int total, int filter_size, double lsb);
 			void init_reg(int reg, int value);
-			void print_accel_data();
-			void print_gyro_data();
-			void print_temp_data();
 			void check_filter(int &filter_size);
 			void mpu_not_found_error();
 			bool detect_mpu();

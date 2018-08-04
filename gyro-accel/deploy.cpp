@@ -1,20 +1,19 @@
 #include "deploy.h"
 #include "basics.h"
 
-
 Servo servo;
 
-void servo_init(int armed, int arming, int wait_time){
+void servo_init(int setup_pos, int armed, int wait_time){
   
   
   servo.attach(SERVO);
   tone(BUZZER, 3000, 333);               //alerts that beginning the arming stage              
   
-  servo.write(arming);         //moves servo to arming position
+  servo.write(setup_pos);         //moves servo to arming position
   
   delay(wait_time);                  //waits X seconds to allow for rubber band to be armed
-  
-  servo.write(arming);         //finished arming, go to begin position
+  delay(wait_time);                  //waits X seconds to allow for rubber band to be armed
+  delay(wait_time);                  //waits X seconds to allow for rubber band to be armed
   
    for(int i = 0; i < 4; i++){               //alerts that arming is done and servo is ready to deploy
       tone(BUZZER, 3000, 125);
@@ -31,3 +30,6 @@ void deploy(int deploy_pos){                        //moves servo to final posit
   }
   servo.write(deploy_pos);
 }
+
+
+

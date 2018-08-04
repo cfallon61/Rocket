@@ -39,17 +39,18 @@ GY521::GY521(gyro_value_t gyro_value, accel_value_t accel_value)    //sets the a
   }
 }
 
-void GY521::init()
+bool GY521::init()
 {
   if (!detect_mpu())  //if the MPU is not detected, error
   {
-    mpu_not_found_error();
+    return false;
   }
   else    //initialize the registers
   {
     init_reg(PWR_MGMT_1, 0);
     init_reg(GYRO_CONFIG, gyro_value<<3);
     init_reg(ACCEL_CONFIG, accel_value<<3);   
+    return true;
   }
 }
 
@@ -104,6 +105,40 @@ void GY521::print_temp_data()   //print temp values
 	Serial.print("temp = "); Serial.println(temp);
 }
 
+double GY521::get_x_accel()
+{
+	return x_accel;
+}
+double GY521::get_y_accel()
+{
+	return y_accel;
+}
+
+double GY521::get_z_accel()
+{
+	return z_accel;
+}
+
+double GY521::get_x_gyro()
+{
+	return x_gyro;
+}
+
+double GY521::get_y_gyro()
+{
+	return y_gyro;
+}
+
+double GY521::get_z_gyro()
+{
+	return z_gyro;
+}
+
+double GY521::get_temp()
+{
+	return temp;
+}
+
 void GY521::check_filter(int &filter_size)    //checks for valid filter range, 1 - 10
 {
 	if (filter_size > 10)   //if greater than 10, reset to 10
@@ -150,8 +185,6 @@ void GY521::read_accel(int filter_size)   //read accelerometer data and pre filt
 	x_accel = convert_data(tot_x, filter_size, accel_lsb);    //averages the values and then divides by their LSB to get the actual value
 	y_accel = convert_data(tot_y, filter_size, accel_lsb);
 	z_accel = convert_data(tot_z, filter_size, accel_lsb);
-	
-	print_accel_data();
 }
 
 void GY521::read_gyro()   //default sample size of 3, reads gyro data
@@ -181,8 +214,6 @@ void GY521::read_gyro(int filter_size)    //read gyro data and pre filter it usi
 	x_gyro = convert_data(tot_x, filter_size, gyro_lsb);   //averages the values and then divides by their LSB to get the actual value
 	y_gyro = convert_data(tot_y, filter_size, gyro_lsb);
 	z_gyro = convert_data(tot_z, filter_size, gyro_lsb);
-	
-	print_gyro_data();
 }
 
 void GY521::read_temp()   //default sample size of 3, reads temp data
@@ -202,9 +233,12 @@ void GY521::read_temp(int filter_size)        //read temp data and pre filter it
 		read_reg(&temp_arr[i], TEMP_OUT_H);
 		tot_temp += temp_arr[i];
 	}
-	temp = tot_temp / filter_size;    //averages the values and then divides by their LSB to get the actual value
+	temp = tot_temp / filter_size;    //averages the values
 	temp = temp / 340 + 36.53;      //converts to degrees C based on datasheet
-	print_temp_data();
+  if (temp > 40)
+  {
+    temp -= 20;
+  }
 }
 
 
@@ -229,13 +263,25 @@ bool GY521::detect_mpu()		//return true if the MPU is detected, false otherwise
   return false;
 }
 
-void GY521::mpu_not_found_error()	//flash onboard LED to show not found
+
+bool GY521::check_freefall()
 {
-	while(1)
-	{
-		loop_flash(3, 250);
-		flash(500);
-	}
+  if (x_accel < 0.07 && x_accel > -0.07 && y_accel < 0.07 && y_accel > -0.07 && z_accel < 0.07 && z_accel > -0.07)
+  {
+    return true;
+  }
+  return false;
 }
+
+bool GY521::check_tilt()
+{
+  if ((x_gyro > 200 || x_gyro < -200) || (y_gyro > 200 || y_gyro < -200) || (z_gyro > 200 || z_gyro < -200))
+  {
+    return true;
+  }
+  return false;
+}
+
+
 
 
