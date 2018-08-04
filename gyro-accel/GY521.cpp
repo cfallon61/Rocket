@@ -264,18 +264,31 @@ bool GY521::detect_mpu()		//return true if the MPU is detected, false otherwise
 }
 
 
-bool GY521::check_freefall()
+bool GY521::check_freefall(double threshold)
 {
-  if (x_accel < 0.07 && x_accel > -0.07 && y_accel < 0.07 && y_accel > -0.07 && z_accel < 0.07 && z_accel > -0.07)
+  if (x_accel < threshold && x_accel > -threshold 
+      && y_accel < threshold && y_accel > -threshold 
+      && z_accel < threshold && z_accel > -threshold)
   {
     return true;
   }
   return false;
 }
 
-bool GY521::check_tilt()
+bool GY521::check_launch(double threshold)
 {
-  if ((x_gyro > 200 || x_gyro < -200) || (y_gyro > 200 || y_gyro < -200) || (z_gyro > 200 || z_gyro < -200))
+  if ((x_accel > threshold || x_accel < -threshold) 
+      || (y_accel > threshold || y_accel < -threshold) 
+      || (z_accel > threshold || z_accel < -threshold))
+  {
+    return true;
+  }
+  return false;
+}
+
+bool GY521::check_tilt(double threshold)
+{
+  if ((x_gyro > threshold || x_gyro < -threshold) || (y_gyro > threshold || y_gyro < -threshold) || (z_gyro > threshold || z_gyro < -threshold))
   {
     return true;
   }

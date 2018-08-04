@@ -81,8 +81,9 @@ class GY521
 			double get_temp();
 			void read_gyro(int filter_size);
 			void read_temp(int filter_size);
-      bool check_freefall();
-      bool check_tilt();
+      bool check_launch(double threshold);
+      bool check_freefall(double threshold);
+      bool check_tilt(double threshold);
 			
 		private:  
 		
