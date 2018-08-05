@@ -78,6 +78,26 @@ void GY521::read_data()   //default read all data, filter default is 3
   read_data(3);
 }
 
+void GY521::print_data(data_type data)
+{
+  switch (data)
+  {
+    case (ACCEL):
+      print_accel_data();
+      break;
+    case (GYRO):
+      print_gyro_data();
+      break;
+    case (TEMP):
+      print_temp_data();
+      break;
+    case (ALL_DATA):
+      print_accel_data();
+      print_gyro_data();
+      print_temp_data();
+  }
+}
+
 void GY521::read_data(int filter_size)   //reads the data from all 3 sensors and filters using up to 10 samples
 {
   check_filter(filter_size);
@@ -288,12 +308,27 @@ bool GY521::check_launch(double threshold)
 
 bool GY521::check_tilt(double threshold)
 {
-  if ((x_gyro > threshold || x_gyro < -threshold) || (y_gyro > threshold || y_gyro < -threshold) || (z_gyro > threshold || z_gyro < -threshold))
+  if ((x_gyro > threshold || x_gyro < -threshold) 
+  || (y_gyro > threshold || y_gyro < -threshold) 
+  || (z_gyro > threshold || z_gyro < -threshold))
   {
     return true;
   }
   return false;
 }
+
+bool GY521::is_touched_down(double threshold)
+{
+  if (x_accel < threshold && x_accel > -threshold 
+      && y_accel < threshold && y_accel > -threshold 
+      && z_accel < threshold && z_accel > -threshold)
+   {
+      return true;
+   }
+   return false;
+}
+
+
 
 
 

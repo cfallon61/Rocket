@@ -23,11 +23,17 @@ void servo_init(int setup_pos, int armed, int wait_time){
    servo.write(armed);
 }
 
-void deploy(int deploy_pos){                        //moves servo to final position
+void deploy(int deploy_pos)
+{
+  deploy(deploy_pos, 0);
+}
+
+void deploy(int deploy_pos, int wait){                        //moves servo to final position
   for (int i = 0; i < 3; i++){
     tone(BUZZER, 4000, 125);
     delay(250);
   }
+  delay(wait);
   servo.write(deploy_pos);
 }
 

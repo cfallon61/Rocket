@@ -55,34 +55,40 @@ enum gyro_value_t
   GYRO_2000DG, 
 };
 
+enum data_type
+{
+  ACCEL,
+  GYRO,
+  TEMP,
+  ALL_DATA,
+};
  
 class GY521
 {
 		public:
    
-			GY521(gyro_value_t gyro_value, accel_value_t accel_value); 
-      
+			GY521(gyro_value_t gyro_value, accel_value_t accel_value);
+      GY521() : GY521(GYRO_250DG, ACCEL_16G){}
 			void read_accel();
 			void read_gyro();
 			void read_temp();
-			void read_data();
-      void print_accel_data();
-      void print_gyro_data();
-      void print_temp_data();
 			bool init();
+      void read_data();
+      void print_data(data_type data);
 			void read_data(int filter_size);
+      double get_x_accel();
+      double get_y_accel();
+      double get_z_accel();
+      double get_x_gyro();
+      double get_y_gyro();
+      double get_z_gyro();
+      double get_temp();
 			void read_accel(int filter_size);
-			double get_x_accel();
-			double get_y_accel();
-			double get_z_accel();
-			double get_x_gyro();
-			double get_y_gyro();
-			double get_z_gyro();
-			double get_temp();
 			void read_gyro(int filter_size);
 			void read_temp(int filter_size);
       bool check_launch(double threshold);
       bool check_freefall(double threshold);
+      bool GY521::is_touched_down(double threshold);
       bool check_tilt(double threshold);
 			
 		private:  
@@ -101,7 +107,9 @@ class GY521
 			void check_filter(int &filter_size);
 			void mpu_not_found_error();
 			bool detect_mpu();
+      void print_accel_data();
+      void print_gyro_data();
+      void print_temp_data();
 		
-			
 };
 #endif

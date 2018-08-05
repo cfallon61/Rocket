@@ -9,12 +9,6 @@
 
 #define CHIP_SELECT 10
 
-enum data_type
-{
-	accel_data,
-	gyro_data,
-	temp_data,
-};
 
 class Log
 {
@@ -22,6 +16,10 @@ class Log
 		Log();
 		bool init();
 		bool log_to_file(GY521 mpu);
+    bool log_event(String event);
+	private:
+		String filename;
+		void check_files();
 };
 
 
