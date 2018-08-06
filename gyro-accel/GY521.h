@@ -88,7 +88,7 @@ class GY521
 			void read_temp(int filter_size);
       bool check_launch(double threshold);
       bool check_freefall(double threshold);
-      bool GY521::is_touched_down(double threshold);
+      bool is_touched_down(double threshold);
       bool check_tilt(double threshold);
 			
 		private:  

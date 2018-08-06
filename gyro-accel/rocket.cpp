@@ -81,16 +81,21 @@ void Rocket::freefall_event()
 
 void Rocket::current_status()
 {
-  mpu6050.read_data();
+  current_status(3);
+}
+
+void Rocket::current_status(int sample_rate)
+{
+  mpu6050.read_data(sample_rate);
 
   if (in_flight)
   {
     logger.log_to_file(mpu6050);
-    if (mpu6050.check_freefall(ff_threshold))     //if the rocket is in freefall deploy the parachute
+    if (/*mpu6050.check_freefall(ff_threshold)*/ mpu6050.check_tilt(tilt_threshold) && !parachute_deployed)     //if the rocket is in freefall deploy the parachute
     {
       freefall_event();
     }
-    else if (mpu6050.check_tilt(tilt_threshold) && parachute_deployed && mpu6050.is_touched_down(touch_down_threshold))  //if the tilt of the rocket has exceeded threshold landing value, stop logging and sound buzzer forever
+    else if (mpu6050.is_touched_down(touch_down_threshold) && parachute_deployed)  //if the tilt of the rocket has exceeded threshold landing value, stop logging and sound buzzer forever
     {
       landed_event();
     }

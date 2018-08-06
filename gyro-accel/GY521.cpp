@@ -234,6 +234,7 @@ void GY521::read_gyro(int filter_size)    //read gyro data and pre filter it usi
 	x_gyro = convert_data(tot_x, filter_size, gyro_lsb);   //averages the values and then divides by their LSB to get the actual value
 	y_gyro = convert_data(tot_y, filter_size, gyro_lsb);
 	z_gyro = convert_data(tot_z, filter_size, gyro_lsb);
+  x_gyro += 5;
 }
 
 void GY521::read_temp()   //default sample size of 3, reads temp data
@@ -254,11 +255,7 @@ void GY521::read_temp(int filter_size)        //read temp data and pre filter it
 		tot_temp += temp_arr[i];
 	}
 	temp = tot_temp / filter_size;    //averages the values
-	temp = temp / 340 + 36.53;      //converts to degrees C based on datasheet
-  if (temp > 40)
-  {
-    temp -= 20;
-  }
+	temp = (temp / 340) + 35.53;      //converts to degrees C based on datasheet
 }
 
 

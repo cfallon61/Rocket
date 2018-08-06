@@ -14,6 +14,7 @@ public:
   void start();
   void debug(data_type type);
   void current_status();
+  void current_status(int sample_rate);
 
 private:
   int deploy_pos;
