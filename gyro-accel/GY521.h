@@ -41,10 +41,10 @@
 
 enum accel_value_t
 {
-  ACCEL_2G, 
-  ACCEL_4G, 
-  ACCEL_8G, 
-  ACCEL_16G, 
+  ACCEL_2G,
+  ACCEL_4G,
+  ACCEL_8G,
+  ACCEL_16G,
 };
 
 enum gyro_value_t
@@ -52,7 +52,7 @@ enum gyro_value_t
   GYRO_250DG,
   GYRO_500DG,
   GYRO_1000DG,
-  GYRO_2000DG, 
+  GYRO_2000DG,
 };
 
 enum data_type
@@ -62,20 +62,20 @@ enum data_type
   TEMP,
   ALL_DATA,
 };
- 
+
 class GY521
 {
 		public:
-   
+
 			GY521(gyro_value_t gyro_value, accel_value_t accel_value);
       GY521() : GY521(GYRO_250DG, ACCEL_16G){}
-			void read_accel();
-			void read_gyro();
-			void read_temp();
-			bool init();
-      void read_data();
-      void print_data(data_type data);
-			void read_data(int filter_size);
+			void read_accel();   //reads the accelerometer data, default to sample size of 3
+			void read_gyro();    //reads the gyroscope data, default to sample size of 3
+			void read_temp();    //reads the temperature data, default to sample size of 3
+			bool init();     //initialize MPU if it is found
+      void read_data();   //read the data from all the sensors at once
+      void print_data(data_type data);    //prints the data values to the serial bus
+			void read_data(int sample_size);   //read all the data and averages it together using sample_size
       double get_x_accel();
       double get_y_accel();
       double get_z_accel();
@@ -83,16 +83,16 @@ class GY521
       double get_y_gyro();
       double get_z_gyro();
       double get_temp();
-			void read_accel(int filter_size);
-			void read_gyro(int filter_size);
-			void read_temp(int filter_size);
-      bool check_launch(double threshold);
-      bool check_freefall(double threshold);
-      bool is_touched_down(double threshold);
+			void read_accel(int sample_size);    //reads the accelerometer data and averages it together using sample_size
+			void read_gyro(int sample_size);     //reads the gyro data and averages it together using sample_size
+			void read_temp(int sample_size);
+      bool check_launch(double threshold);    //check to see if the acceleration has spiked past threshold
+      bool check_freefall(double threshold);    //check to see if the rocket is in freefall, which is specified by the provided threshold
+      bool is_touched_down(double threshold);   //check to see if there is another spike in g forces to determine touch down
       bool check_tilt(double threshold);
-			
-		private:  
-		
+
+		private:
+
 			int gyro_value;
 			int accel_value;
 			double accel_lsb;
@@ -101,15 +101,14 @@ class GY521
 			double x_gyro, y_gyro, z_gyro;
 			double temp;
 
-			void read_reg(int16_t *data, int begin_addr);
-			double convert_data(int total, int filter_size, double lsb);
-			void init_reg(int reg, int value);
-			void check_filter(int &filter_size);
-			void mpu_not_found_error();
+			void read_reg(int16_t *data, int begin_addr);    //reads 2 bytes from the specified begin address
+			double convert_data(int total, int sample_size, double lsb);   //process the data by averaging it and dividing by the corresponding LSB
+			void init_reg(int reg, int value);   //initialize the specified register
+			void check_filter(int &sample_size); //checks to see if the sample size is a valid one, 1 - 10, larger than 10 values will cause significant performance drops
 			bool detect_mpu();
-      void print_accel_data();
-      void print_gyro_data();
-      void print_temp_data();
-		
+      void print_accel_data();    //prints the accelerometer data to serial bus for live debugging
+      void print_gyro_data();    //prints the gyro data to serial bus for live debugging
+      void print_temp_data();    //prints the temperature data to serial bus for live debugging
+
 };
 #endif

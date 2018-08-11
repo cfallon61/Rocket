@@ -13,13 +13,13 @@
 class Log
 {
 	public:
-		Log();
-		bool init();
-		bool log_to_file(GY521 mpu);
-    bool log_event(String event);
+		Log() {}		//empty constructor
+		bool init();		//initialize the logger and try to detect if the SD card is present
+		bool log_to_file(GY521 mpu);		//log all data values to the SD card
+    bool log_event(String event);		//logs an event string to the data file
 	private:
-		String filename;
-		void check_files();
+		String filename;			//filename to be written to
+		void check_files();		//checks to see if there are already files on the device
 };
 
 

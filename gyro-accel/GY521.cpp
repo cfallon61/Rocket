@@ -2,10 +2,10 @@
 #include "basics.h"
 
 GY521::GY521(gyro_value_t gyro_value, accel_value_t accel_value)    //sets the accelerometer LSB based on accel_value and initializes the gyro and accelerometer based on their desired parameters
-{ 
+{
   this->accel_value = accel_value;
   this->gyro_value = gyro_value;
-  
+
   switch (accel_value)    //sets the accelerometer LSB for conversion to actual values
   {
     case(ACCEL_2G):
@@ -41,44 +41,44 @@ GY521::GY521(gyro_value_t gyro_value, accel_value_t accel_value)    //sets the a
 
 bool GY521::init()
 {
-  if (!detect_mpu())  //if the MPU is not detected, error
+  if (!detect_mpu())  //if the MPU is not detected, return false for error
   {
     return false;
   }
   else    //initialize the registers
   {
-    init_reg(PWR_MGMT_1, 0);
-    init_reg(GYRO_CONFIG, gyro_value<<3);
-    init_reg(ACCEL_CONFIG, accel_value<<3);   
-    return true;
+    init_reg(PWR_MGMT_1, 0);    //wake up the accelerometer from sleep
+    init_reg(GYRO_CONFIG, gyro_value<<3);   //initialize the gyro, see header for relevant bits
+    init_reg(ACCEL_CONFIG, accel_value<<3); //initialize the accelerometer, see header for relevant bits
+    return true;    //return true on success
   }
 }
 
-void GY521::init_reg(int reg, int value)
+void GY521::init_reg(int reg, int value)    //method used to write value to the relevant registers
 {
-	Wire.beginTransmission(GY521_ADDR);
-	Wire.write(reg);
-	Wire.write(value);
-	Wire.endTransmission(true);
+	Wire.beginTransmission(GY521_ADDR);    //bring the I2C line to the MPU high for transmission
+	Wire.write(reg);     //tell the MPU which register to write the value to
+	Wire.write(value);   //write the value to the register
+	Wire.endTransmission(true);    //bring the I2C line low for end transmission
 }
 
 
-void GY521::read_reg(int16_t *data, int begin_addr)
+void GY521::read_reg(int16_t *data, int begin_addr)     //reads the begin and end data registers for the specified axes/MEMS device, see header for list of options
 {
- Wire.beginTransmission(GY521_ADDR);
-  Wire.write(begin_addr);
+ Wire.beginTransmission(GY521_ADDR);    //bring high for begin transmission
+  Wire.write(begin_addr);     //specify the register to get data from
   Wire.endTransmission(false);
-  Wire.requestFrom(GY521_ADDR, 2, true);
-  
-  *data = Wire.read() <<8 | Wire.read();
+  Wire.requestFrom(GY521_ADDR, 2, true);    //read 2 bytes from the register
+
+  *data = Wire.read() <<8 | Wire.read();    //read the first byte, left shift the data 8 bits, then logical or with the next byte. write that to data
 }
 
-void GY521::read_data()   //default read all data, filter default is 3
+void GY521::read_data()   //default read all data, sample data points is 3
 {
   read_data(3);
 }
 
-void GY521::print_data(data_type data)
+void GY521::print_data(data_type data)    //public method for writing the data to serial interface for live debugging
 {
   switch (data)
   {
@@ -98,83 +98,83 @@ void GY521::print_data(data_type data)
   }
 }
 
-void GY521::read_data(int filter_size)   //reads the data from all 3 sensors and filters using up to 10 samples
+void GY521::read_data(int sample_size)   //reads the data from all 3 sensors and filters using up to 10 samples
 {
-  check_filter(filter_size);
-	read_accel(filter_size);
-	read_temp(filter_size);
-	read_gyro(filter_size);
+  check_filter(sample_size);
+	read_accel(sample_size);
+	read_temp(sample_size);
+	read_gyro(sample_size);
 }
 
-void GY521::print_accel_data()    //print accelerometer values
+void GY521::print_accel_data()    //print accelerometer values to serial interface for live debugging
 {
 	Serial.print("x_accel = "); Serial.print(x_accel);
 	Serial.print(" | y_accel = "); Serial.print(y_accel);
 	Serial.print(" | z_accel = "); Serial.println(z_accel);
 }
 
-void GY521::print_gyro_data() //print gyro values
+void GY521::print_gyro_data() //print gyro values to serial interface for live debugging
 {
 	Serial.print("x_gyro = "); Serial.print(x_gyro);
 	Serial.print(" | y_gyro = "); Serial.print(y_gyro);
 	Serial.print(" | z_gyro = "); Serial.println(z_gyro);
 }
 
-void GY521::print_temp_data()   //print temp values
+void GY521::print_temp_data()   //print temp values to serial interface for live debugging
 {
 	Serial.print("temp = "); Serial.println(temp);
 }
 
-double GY521::get_x_accel()
+double GY521::get_x_accel()   //getter method for returning the current x acceleration value
 {
 	return x_accel;
 }
-double GY521::get_y_accel()
+double GY521::get_y_accel()   //getter method for returning the current y acceleration value
 {
 	return y_accel;
 }
 
-double GY521::get_z_accel()
+double GY521::get_z_accel()   //getter method for returning the current z acceleration value
 {
 	return z_accel;
 }
 
-double GY521::get_x_gyro()
+double GY521::get_x_gyro()   //getter method for returning the current x gyro value
 {
 	return x_gyro;
 }
 
-double GY521::get_y_gyro()
+double GY521::get_y_gyro()   //getter method for returning the current y gyro value
 {
 	return y_gyro;
 }
 
-double GY521::get_z_gyro()
+double GY521::get_z_gyro()   //getter method for returning the current z gyro value
 {
 	return z_gyro;
 }
 
-double GY521::get_temp()
+double GY521::get_temp()   //getter method for returning the current temp value
 {
 	return temp;
 }
 
-void GY521::check_filter(int &filter_size)    //checks for valid filter range, 1 - 10
+void GY521::check_filter(int &sample_size)    //checks for valid filter range, 1 - 10
 {
-	if (filter_size > 10)   //if greater than 10, reset to 10
+	if (sample_size > 10)   //if greater than 10, reset to 10
 	{
-		filter_size = 10;
+		sample_size = 10;
     return;
 	}
-  if (filter_size < 1)  //if less than 1, set to 1
+  if (sample_size < 1)  //if less than 1, set to 1
   {
-    filter_size = 1; 
+    sample_size = 1;
   }
 }
 
-double GY521::convert_data(int total, int filter_size, double lsb)
+double GY521::convert_data(int total, int sample_size, double lsb)    //takes the raw data and averages the values by the sample size and then divides by the LSB of the corresponding sensor
 {
-  return (total / filter_size) / lsb;
+  return (total / sample_size) / lsb;
 }
 
 void GY521::read_accel()  //default sample size of 3, reads accelerometer data
@@ -182,29 +182,29 @@ void GY521::read_accel()  //default sample size of 3, reads accelerometer data
 	read_accel(3);
 }
 
-void GY521::read_accel(int filter_size)   //read accelerometer data and pre filter it using the sample size provided
+void GY521::read_accel(int sample_size)   //read accelerometer data and pre filter it using the sample size provided
 {
-	check_filter(filter_size);
-	
-	int16_t x_arr[filter_size];
-	int16_t y_arr[filter_size];
-	int16_t z_arr[filter_size];
+	check_filter(sample_size);
+
+	int16_t x_arr[sample_size];    //make 3 new arrays to store the list of values in to be averaged later
+	int16_t y_arr[sample_size];
+	int16_t z_arr[sample_size];
 	long tot_x, tot_y, tot_z = 0;
- 
-	for (int i = 0; i < filter_size; i++)   //takes in filter_size amount of samples and adds them to a total value
+
+	for (int i = 0; i < sample_size; i++)   //takes in sample_size amount of samples and adds them to a total value
 	{
-		read_reg(&x_arr[i], ACCEL_XOUT_H);
+		read_reg(&x_arr[i], ACCEL_XOUT_H);    //read the accelerometer registers
 		read_reg(&y_arr[i], ACCEL_YOUT_H);
 		read_reg(&z_arr[i], ACCEL_ZOUT_H);
-		
-		tot_x += x_arr[i];
+
+		tot_x += x_arr[i];    //add all the values for averaging later
 		tot_y += y_arr[i];
 		tot_z += z_arr[i];
 	}
-	
-	x_accel = convert_data(tot_x, filter_size, accel_lsb);    //averages the values and then divides by their LSB to get the actual value
-	y_accel = convert_data(tot_y, filter_size, accel_lsb);
-	z_accel = convert_data(tot_z, filter_size, accel_lsb);
+
+	x_accel = convert_data(tot_x, sample_size, accel_lsb);    //averages the raw values and then divides by their LSB to get the actual value
+	y_accel = convert_data(tot_y, sample_size, accel_lsb);
+	z_accel = convert_data(tot_z, sample_size, accel_lsb);
 }
 
 void GY521::read_gyro()   //default sample size of 3, reads gyro data
@@ -212,28 +212,28 @@ void GY521::read_gyro()   //default sample size of 3, reads gyro data
 	read_gyro(3);
 }
 
-void GY521::read_gyro(int filter_size)    //read gyro data and pre filter it using the sample size provided
+void GY521::read_gyro(int sample_size)    //read gyro data and pre filter it using the sample size provided
 {
-	check_filter(filter_size);
+	check_filter(sample_size);
 
-	int16_t x_arr[filter_size];
-	int16_t y_arr[filter_size];
-	int16_t z_arr[filter_size];
+	int16_t x_arr[sample_size];    //make 3 new arrays to store the list of values in to be averaged later
+	int16_t y_arr[sample_size];
+	int16_t z_arr[sample_size];
 	long tot_x, tot_y, tot_z = 0;
-	
-	for (int i = 0; i < filter_size; i++)   //takes in filter_size amount of samples and adds them to a total value
+
+	for (int i = 0; i < sample_size; i++)   //takes in sample_size amount of samples and adds them to a total value
 	{
 		read_reg(&x_arr[i], GYRO_XOUT_H);
 		read_reg(&y_arr[i], GYRO_YOUT_H);
 		read_reg(&z_arr[i], GYRO_ZOUT_H);
-		
+
 		tot_x += x_arr[i];
 		tot_y += y_arr[i];
 		tot_z += z_arr[i];
 	}
-	x_gyro = convert_data(tot_x, filter_size, gyro_lsb);   //averages the values and then divides by their LSB to get the actual value
-	y_gyro = convert_data(tot_y, filter_size, gyro_lsb);
-	z_gyro = convert_data(tot_z, filter_size, gyro_lsb);
+	x_gyro = convert_data(tot_x, sample_size, gyro_lsb);   //averages the values and then divides by their LSB to get the actual value
+	y_gyro = convert_data(tot_y, sample_size, gyro_lsb);
+	z_gyro = convert_data(tot_z, sample_size, gyro_lsb);
   x_gyro += 5;
 }
 
@@ -242,19 +242,19 @@ void GY521::read_temp()   //default sample size of 3, reads temp data
 	read_temp(3);
 }
 
-void GY521::read_temp(int filter_size)        //read temp data and pre filter it using the sample size provided
+void GY521::read_temp(int sample_size)        //read temp data and filter it using the sample size provided
 {
-	check_filter(filter_size);
+	check_filter(sample_size);
 
-	int16_t temp_arr[filter_size];
+	int16_t temp_arr[sample_size];
 	int16_t tot_temp = 0;
- 
-	for (int i = 0; i < filter_size; i++)   //takes in filter_size amount of samples and adds them to a total value
+
+	for (int i = 0; i < sample_size; i++)   //takes in sample_size amount of samples and adds them to a total value
 	{
 		read_reg(&temp_arr[i], TEMP_OUT_H);
 		tot_temp += temp_arr[i];
 	}
-	temp = tot_temp / filter_size;    //averages the values
+	temp = tot_temp / sample_size;    //averages the values
 	temp = (temp / 340) + 35.53;      //converts to degrees C based on datasheet
 }
 
@@ -262,8 +262,8 @@ void GY521::read_temp(int filter_size)        //read temp data and pre filter it
 bool GY521::detect_mpu()		//return true if the MPU is detected, false otherwise
 {
 	int address;
-	int error; 
-  
+	int error;
+
 	for(address = 1; address < 127; address++ )
 	{
     // The i2c_scanner uses the return value of
@@ -271,20 +271,20 @@ bool GY521::detect_mpu()		//return true if the MPU is detected, false otherwise
     // a device did acknowledge to the address.
 		Wire.beginTransmission(address);
 		error = Wire.endTransmission();
- 
-		if (error == 0)
+
+		if (error == 0) //if the error is not 1, return true because there is a device detected at this address
 		{
 			return true;
-		}   
+		}
   }
-  return false;
+  return false;   //no devices detected, return false
 }
 
 
-bool GY521::check_freefall(double threshold)
+bool GY521::check_freefall(double threshold)    //checks to see if the rocket is in a state of 0 g / freefall
 {
-  if (x_accel < threshold && x_accel > -threshold 
-      && y_accel < threshold && y_accel > -threshold 
+  if (x_accel < threshold && x_accel > -threshold
+      && y_accel < threshold && y_accel > -threshold
       && z_accel < threshold && z_accel > -threshold)
   {
     return true;
@@ -292,10 +292,10 @@ bool GY521::check_freefall(double threshold)
   return false;
 }
 
-bool GY521::check_launch(double threshold)
+bool GY521::check_launch(double threshold)    //if the g forces have spiked beyond the specified threshold, then the rocket is assumed to have launched
 {
-  if ((x_accel > threshold || x_accel < -threshold) 
-      || (y_accel > threshold || y_accel < -threshold) 
+  if ((x_accel > threshold || x_accel < -threshold)
+      || (y_accel > threshold || y_accel < -threshold)
       || (z_accel > threshold || z_accel < -threshold))
   {
     return true;
@@ -303,10 +303,10 @@ bool GY521::check_launch(double threshold)
   return false;
 }
 
-bool GY521::check_tilt(double threshold)
+bool GY521::check_tilt(double threshold)    //check the rotational speed of the rocket
 {
-  if ((x_gyro > threshold || x_gyro < -threshold) 
-  || (y_gyro > threshold || y_gyro < -threshold) 
+  if ((x_gyro > threshold || x_gyro < -threshold)
+  || (y_gyro > threshold || y_gyro < -threshold)
   || (z_gyro > threshold || z_gyro < -threshold))
   {
     return true;
@@ -314,19 +314,13 @@ bool GY521::check_tilt(double threshold)
   return false;
 }
 
-bool GY521::is_touched_down(double threshold)
+bool GY521::is_touched_down(double threshold)   //if there is another spike in g forces after the rocket has been detected to launch, the rocket has landed
 {
-  if (x_accel < threshold && x_accel > -threshold 
-      && y_accel < threshold && y_accel > -threshold 
+  if (x_accel < threshold && x_accel > -threshold
+      && y_accel < threshold && y_accel > -threshold
       && z_accel < threshold && z_accel > -threshold)
    {
       return true;
    }
    return false;
 }
-
-
-
-
-
-

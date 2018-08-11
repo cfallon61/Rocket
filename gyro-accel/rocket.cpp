@@ -4,10 +4,10 @@ Rocket::Rocket(accel_value_t accel, gyro_value_t gyro, double launch_threshold, 
 int setup_pos, int armed_pos, int deploy_pos, int setup_wait_time,
 int deploy_wait_time)
 {
-  pinMode(buzzer, OUTPUT);
+  pinMode(buzzer, OUTPUT);    //buzz the buzzer to alert that it works
   tone(buzzer, 4000, 100);
 
-  pinMode(5, OUTPUT);
+  pinMode(5, OUTPUT);   //bring pin 5 HIGH to be used as a voltage source for one of the sensors
   digitalWrite(5, HIGH);
 
   this->launch_threshold = launch_threshold;
@@ -35,7 +35,7 @@ void Rocket::start()
     logger.log_event("MPU_Failure");
     mpu_init_error();
   }
-  servo_init(setup_pos, armed_pos, setup_wait_time);
+  servo_init(setup_pos, armed_pos, setup_wait_time);    //if all has gone well, get the servo ready for loading
 }
 
 
@@ -64,7 +64,7 @@ void Rocket::landed_event()   //function for when the rocket has detected having
   }
 }
 
-void Rocket::launch_event()   //fucntion for detection of launch
+void Rocket::launch_event()   //method for detection of launch
 {
   tone(buzzer, 4000, 250);    //alert of status chance
   in_flight = true;   //toggle flight status
@@ -72,14 +72,14 @@ void Rocket::launch_event()   //fucntion for detection of launch
   logger.log_to_file(mpu6050);
 }
 
-void Rocket::freefall_event()
+void Rocket::freefall_event()   //method which triggers an event if the rocket is found to be in freefall
 {
   deploy(deploy_pos, deploy_wait_time);
   parachute_deployed = true;
-  logger.log_event("Parachute_Deployed");
+  logger.log_event("Parachute_Deployed");   //log the parachute deployed event for ground debugging if the parachute doesnt open
 }
 
-void Rocket::current_status()
+void Rocket::current_status()   //default method which reads the current data values for all the sensors and determines what actions to take
 {
   current_status(3);
 }
@@ -88,10 +88,10 @@ void Rocket::current_status(int sample_rate)
 {
   mpu6050.read_data(sample_rate);
 
-  if (in_flight)
+  if (in_flight)    //if the rocket is in flight, check its status
   {
     logger.log_to_file(mpu6050);
-    if (/*mpu6050.check_freefall(ff_threshold)*/ mpu6050.check_tilt(tilt_threshold) && !parachute_deployed)     //if the rocket is in freefall deploy the parachute
+    if (mpu6050.check_freefall(ff_threshold) /*mpu6050.check_tilt(tilt_threshold)*/ && !parachute_deployed)     //if the rocket is in freefall deploy the parachute
     {
       freefall_event();
     }
@@ -106,7 +106,7 @@ void Rocket::current_status(int sample_rate)
   }
 }
 
-void Rocket::logger_init_error()
+void Rocket::logger_init_error()    //error if the logger is unable to be initialized properly
 {
   while(1)
     {
@@ -115,7 +115,7 @@ void Rocket::logger_init_error()
     }
 }
 
-void Rocket::mpu_init_error()
+void Rocket::mpu_init_error()   //error if the MPU is unable to be initialized
 {
   while (1)
 {
